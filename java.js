@@ -3,8 +3,11 @@ let fin = false;
 let opcion;
 let pasajes;
 let pago;
+let origen;
+let destino;
 let malaEleccion = false;
-const arrib = ["Buenos aires", "Tenesse", "New York", "Paraná","Cordoba", "Rosario", "Moskú","Barcelona", "Madrid"];
+let bandera = false;
+const arrib = ["BUENOS AIRES", "TENESSE", "NEW YORK", "PARANA","CORDOBA", "ROSARIO", "MOSKU","BARCELONA", "MADRID"];
 
 function localidades(arrib){
     for (let i=0;i<arrib.length;i++){
@@ -38,6 +41,20 @@ function PedirDatosTarjeta(){
     const codSeg = prompt("Ingrese el codigo de seguridad de la tarjeta")
     const tarjetax = new Tarjeta(nTarjeta,fVenc,NTitular,codSeg);
     return tarjetax;
+}
+
+function MuestraClientesYViaje(clientes, viaje){
+console.log("Pasajes para "+viaje.cantidad+" persona/s");
+console.log("Origen: "+viaje.origen.toUpperCase());
+console.log("Destino: "+viaje.destino.toUpperCase());
+for(const cliente of clientes){
+        console.log("Nombre: "+cliente.nombre);
+        console.log("Apellido: "+cliente.apellido);
+        console.log("DNI: "+cliente.DNI);
+        console.log("Fecha de nacimiento: "+cliente.fnac);
+        console.log("Nacionalidad: "+cliente.nacionalidad);
+    }
+
 }
 
 class Cliente{
@@ -95,59 +112,84 @@ do{
                                 console.log("¿Desde que localidad desea despegar?");
                                 console.log("Lista de localidades disponibles");
                                 localidades(arrib);
-                                let origen = prompt("Ingrese alguna localidad dentro de la lista disponible de donde despegar");
+                                do{
+                                origen = prompt("Ingrese alguna localidad dentro de la lista disponible de donde despegar");
+                                //aqui evaluaremos si la localidad ingresada por el usuario está dentro de la lista
+                                if(arrib.some((el) => el == origen.toUpperCase())){
+                                    console.log("¿Hacia que localidad desea ir?");
+                                    console.log("Lista de localidades disponibles");
+                                    localidades(arrib);
+                                    destino = prompt("Ingrese alguna localidad dentro de la lista disponible para destino");
+                                    if(arrib.some((el) => el == destino.toUpperCase())){
+                                        bandera = true;
+                                    }
+                                    else{
+                                        console.log("No existe la localidad ingresada");    
+                                    }
+                                }
+                                else{
+                                    console.log("No existe la localidad ingresada para despegar");
+                                }
+                            }while (bandera==false);
 
-
-                                console.log("¿Hacia que localidad desea ir?");
-                                console.log("Lista de localidades disponibles");
-                                localidades(arrib);
-                                let destino = prompt("Ingrese alguna localidad dentro de la lista disponible para destino");
-
+                            //una vez teniendo la cantidad de pasajes, el origen y el destino se crea el un objeto de la clase viaje
                                 const via = new viaje(origen, destino,pasajes);
-                                       
+                                console.clear();
+
+                            //luego se le solicitan al usuario los datos personales, para ello se crea una instancia de la clase Cliente, y se coloca
+                            // dentro de un vector de objetos, que en este caso será solamente de clientes.    
                                 const clientes = [];
                                 for(let i=0;i<pasajes;i++){
                                 const clientex = PedirDatosPersonales();
                                 clientes.push(clientex);
                                 }
-                                       
+                            
+                            //luego de cargar los datos personales, se procederá a realizar el cobro mediante tarjeta de crédito/débito.
+                                let interes = Math.round((Math.random()*10 + 15)*100)/100; //Genera un interes aleaotorio entre 10 y 25, con 2 decimales
+                                let dolarof = Math.round((Math.random()*100 + 200)*100)/100; //genera un valor de dolar oficial entre 200 y 300, con 2 decimales
+                                let valor = via.valorViaje(dolarof); //invoca al método de la clase viaje para calcular el precio el viaje, con el dolar oficial y los impuestos
+                                let cuotas;
+                                let ok = false;
+                                bandera = false;
+
+                                do{
                                 console.log("Metodo de pago:")
                                 console.log("1 - Tarjeta de débito (sin recargo)");
                                 console.log("2 - Tarjeta de crédito (con recargo)");
                                 const ele = prompt("Elija su método de pago");
-                                let interes = Math.round((Math.random()*10 + 15)*100)/100; //Genera un interes aleaotorio entre 10 y 25
-                                let dolarof = Math.round((Math.random()*100 + 200)*100)/100;
-                                let valor = via.valorViaje(dolarof);
-                                let cuotas;
-                                let ok = false;;
                                 switch(ele){
             
                                     case '1':
                                         console.log("El valor del viaje es de $" + valor);
-
-
-                                    break;
+                                        bandera = true;
+                                        break;
                                     case '2':
                                         do{
                                             cuotas = parseInt(prompt("Indique la cantidad de cuotas a pagar el viaje. La cantidad máxima de cuotas permitida es de 12"));
-                                            if(cuotas<=12){console.log("EL interés es de %" + interes);
+                                            if(cuotas<=12 && cuotas>=1){console.log("EL interés es de %" + interes);
                                             let pFinal = Math.round(valor*(1 + (interes/100)));
                                             console.log("El valor total del viaje es de $" + pFinal);
-                                            console.log("El valor de cada cuota es de $" + Math.round(pFinal/cuotas) +" con una cantidad de "+cuotas+"cuotas");
+                                            console.log("El valor de cada cuota es de $" + Math.round(pFinal/cuotas) +" con una cantidad de "+cuotas+" cuotas");
                                             ok = true;
+                                            bandera = true;
                                         }
                                             else{
                                                 console.log("La cantidad de cuotas no puede ser mayor a 12, ni menor a 1");
                                                 ok = false;
                                             }
-                                        }while(ok ==false);
+                                        }while(ok == false);
                                         
                                     break;
                                     default:
-
+                                            console.log("Opción incorrecta, por favor repita la operación");
                                     break;
                                 }
+                                }while(bandera==false);
+
                                 const tarjetax = PedirDatosTarjeta();
+                                MuestraClientesYViaje(clientes, via);
+                                console.log("Disfrute de su viaje!");
+
                                 break;
                      
             
